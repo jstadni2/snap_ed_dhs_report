@@ -186,18 +186,27 @@ race_subsets = {'participants_total': 'Total',
                 'participants_race_hawpac': 'Native Hawaiian/Other Pacific Islander',
                 'participants_race_white': 'White'}
 
-for field, label in race_subsets .items():
-    PA_race_dfs.append(quarterly_value(df=PA_Data, field=field, metric='sum', label=label))
+for race_field, race_label in race_subsets.items():
+    PA_race_dfs.append(quarterly_value(df=PA_Data, field=race_field, metric='sum', label=race_label))
 
 PA_race = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'), PA_race_dfs)
 
-# Create a function for the copied lines below
-PA_race['% American Indian or Alaska Native'] = 100 * PA_race['American Indian or Alaska Native'] / PA_race['Total']
-PA_race['% Asian'] = 100 * PA_race['Asian'] / PA_race['Total']
-PA_race['% Black or African American'] = 100 * PA_race['Black or African American'] / PA_race['Total']
-PA_race['% Native Hawaiian/Other Pacific Islander'] = 100 * PA_race['Native Hawaiian/Other Pacific Islander'] / PA_race[
-    'Total']
-PA_race['% White'] = 100 * PA_race['White'] / PA_race['Total']
+
+# Function to assign a percent column to a dataframe
+# df: dataframe used to calculate the percent column
+# num: column label to use as the percent numerator
+# denom: column label to use as the percent denominator
+# label: label for the resulting percent column
+def percent(df, num, denom, label):
+    df_copy = df.copy()
+    df_copy[label] = 100 * df_copy[num] / df_copy[denom]
+    return df_copy
+
+
+for race_field in race_subsets.values():
+    if race_field == 'Total':
+        continue
+    PA_race = percent(PA_race, num=race_field, denom='Total', label='% ' + race_field)
 
 PA_hispanic = PA_Data.groupby('report_quarter')['participants_ethnicity_hispanic'].agg('sum').reset_index(
     name='Hispanic/Latinx')
