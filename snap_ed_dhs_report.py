@@ -11,7 +11,7 @@ ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '.'))
 # Otherwise, custom field labels will cause errors
 # pears_export_path = r"\path\to\reformatted_pears_data"
 # Script demo uses /example_inputs directory
-pears_export_path = pd.ExcelFile(ROOT_DIR + "/example_inputs")
+pears_export_path = ROOT_DIR + "/example_inputs"
 
 # Import Indirect Activity data and Intervention Channels
 Indirect_Activities_Export = pd.ExcelFile(pears_export_path + '/' + "Indirect_Activity_Export.xlsx")
@@ -296,8 +296,8 @@ PSE_changes_count['% of PSE sites with a plan to implement PSE changes had at le
 
 prev_month = (pd.to_datetime("today") - pd.DateOffset(months=1)).strftime('%m')
 fq_lookup = pd.DataFrame({'fq': ['Q1', 'Q2', 'Q3', 'Q4'], 'month': ['12', '03', '06', '09'], 'int': [1, 2, 3, 4]})
-fq = fq_lookup.loc[fq_lookup['month'] == prev_month, 'fq'].item()
-fq_int = fq_lookup.loc[fq_lookup['month'] == prev_month, 'int'].item()
+fq = 'Q3'#fq_lookup.loc[fq_lookup['month'] == prev_month, 'fq'].item()
+fq_int = 3#fq_lookup.loc[fq_lookup['month'] == prev_month, 'int'].item()
 
 dfs = [goals_sites_reach, PA_demo, RE_AIM_Reach, RE_AIM_Adoption, RE_AIM_Implementation]
 filtered_dfs = []
@@ -306,7 +306,8 @@ for df in dfs:
     filtered_dfs.append(
         df.loc[df['report_quarter'] <= fq_int].rename(columns={'report_quarter': 'Report Quarter (YTD)'}))
 
-filename = 'DHS Report FY2022 ' + fq + '.xlsx'
+out_path = ROOT_DIR + '/example_outputs'
+filename = out_path + '/DHS Report FY2022 ' + fq + '.xlsx'
 
 tab_names = ['Unique Sites and Reach by Goal', 'Direct Education Demographics', 'RE-AIM Reach', 'RE-AIM Adoption',
              'RE-AIM Implementation']
