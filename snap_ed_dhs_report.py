@@ -178,18 +178,21 @@ goals_sites_reach = pd.merge(unique_sites, reach, how='outer', on=['Goal', 'repo
 
 # DE participants reached
 
-PA_race_dfs = []
-race_subsets = {'participants_total': 'Total',
+PA_demo_dfs = []
+demo_subsets = {'participants_total': 'Total',
                 'participants_race_amerind': 'American Indian or Alaska Native',
                 'participants_race_asian': 'Asian',
                 'participants_race_black': 'Black or African American',
                 'participants_race_hawpac': 'Native Hawaiian/Other Pacific Islander',
-                'participants_race_white': 'White'}
+                'participants_race_white': 'White',
+                'participants_ethnicity_hispanic': 'Hispanic/Latinx',
+                'participants_ethnicity_non_hispanic': 'Non-Hispanic/Non-Latinx'
+                }
 
-for race_field, race_label in race_subsets.items():
-    PA_race_dfs.append(quarterly_value(df=PA_Data, field=race_field, metric='sum', label=race_label))
+for demo_field, demo_label in demo_subsets.items():
+    PA_demo_dfs.append(quarterly_value(df=PA_Data, field=demo_field, metric='sum', label=demo_label))
 
-PA_race = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'), PA_race_dfs)
+PA_demo = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'), PA_demo_dfs)
 
 
 # Function to assign a percent column to a dataframe
@@ -203,24 +206,14 @@ def percent(df, num, denom, label):
     return df_copy
 
 
-for race_field in race_subsets.values():
-    if race_field == 'Total':
+for demo_field in demo_subsets.values():
+    if demo_field == 'Total':
         continue
-    PA_race = percent(PA_race, num=race_field, denom='Total', label='% ' + race_field)
+    PA_demo = percent(PA_demo, num=demo_field, denom='Total', label='% ' + demo_field)
 
-PA_hispanic = PA_Data.groupby('report_quarter')['participants_ethnicity_hispanic'].agg('sum').reset_index(
-    name='Hispanic/Latinx')
-PA_non_hispanic = PA_Data.groupby('report_quarter')['participants_ethnicity_non_hispanic'].agg('sum').reset_index(
-    name='Non-Hispanic/Non-Latinx')
-PA_ethnicity = pd.merge(PA_hispanic, PA_non_hispanic, how='outer', on='report_quarter')
-
-PA_demo = pd.merge(PA_race, PA_ethnicity, how='outer', on='report_quarter')
-PA_demo['% Hispanic/Latinx'] = 100 * PA_demo['Hispanic/Latinx'] / PA_demo['Total']
-PA_demo['% Non-Hispanic/Non-Latinx'] = 100 * PA_demo['Non-Hispanic/Non-Latinx'] / PA_demo['Total']
 PA_demo = PA_demo.round(0).drop(columns=['Total'])
-
+# Pivot demo columns into values of Demographic Group column
 PA_demo = PA_demo.set_index('report_quarter').stack().reset_index().rename(columns={'level_1': 'Demographic Group'})
-
 PA_demo_a = PA_demo.loc[~PA_demo['Demographic Group'].str.contains('%')]
 PA_demo_b = PA_demo.loc[PA_demo['Demographic Group'].str.contains('%')]
 PA_demo_b['Demographic Group'] = PA_demo_b['Demographic Group'].str.replace('% ', '')
