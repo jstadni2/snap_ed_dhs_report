@@ -117,22 +117,36 @@ PSE_NRE_Data = PSE_NRE_Data.loc[PSE_NRE_Data['baseline_date'] >= fy_22_qtr_bound
 
 # Calculate DHS report metrics
 
+
+# Function to calculate the quarterly value of a given field
+# df: dataframe of PEARS module data with 'report_quarter' column
+# field: column used to calculate the quarterly value
+# metric: 'sum' or 'count'
+# label: string for the column label of the quarterly value
+def quarterly_value(df, field, metric, label):
+    return df.groupby('report_quarter')[field].agg(metric).reset_index(name=label)
+
+
 # # of unique programming sites (direct ed & PSE)
 
 unique_sites = PA_Data[['report_quarter', 'snap_ed_grant_goals', 'site_id']].append(
     PSE_Data[['report_quarter', 'snap_ed_grant_goals', 'site_id']], ignore_index=True).drop_duplicates()
 unique_sites = explode_goals(unique_sites)
+# Create function for quarterly goal value
 unique_sites = unique_sites.groupby(['report_quarter', 'goal'])['site_id'].count().reset_index(
     name='# of unique programming sites (direct ed & PSE)')
 unique_sites = unique_sites.rename(columns={'goal': 'Goal'})
 # Remove (direct ed & PSE) from column, add to snap_ed_grant_goals?
 
-unique_coalitions = Coa_Data[['report_quarter', 'coalition_id']].drop_duplicates().groupby('report_quarter')[
-    'coalition_id'].count().reset_index(name='# of unique programming sites (direct ed & PSE)')
+unique_coalitions = quarterly_value(Coa_Data[['report_quarter', 'coalition_id']].drop_duplicates(),
+                                    'coalition_id',
+                                    'count',
+                                    '# of unique programming sites (direct ed & PSE)')
 unique_coalitions['Goal'] = 'Create community collaborations (reported as # coalitions and # organizational members)'
 unique_sites = unique_sites.append(unique_coalitions, ignore_index=True)
 
 # Total Unique Reach
+# Create package function for total_unique_reach(), pending FY23 guidance
 
 PA_sites_reach = PA_Data[['report_quarter', 'snap_ed_grant_goals', 'site_id', 'participants_total']]
 PA_sites_reach = explode_goals(PA_sites_reach)
@@ -153,8 +167,10 @@ reach = reach.rename(columns={'goal': 'Goal'})
 #     ['report_quarter',
 #      'number_of_members']].groupby('report_quarter')['number_of_members'].agg('sum').reset_index(name='Total Reach')
 # Reach via Coa_Data['number_of_members'] != reach via Coa_Members_Data['member_id']
-Coa_reach = Coa_Members_Data[['report_quarter', 'member_id']].groupby('report_quarter')[
-    'member_id'].count().reset_index(name='Total Reach')
+Coa_reach = quarterly_value(df=Coa_Members_Data[['report_quarter', 'member_id']],
+                            field='member_id',
+                            metric='count',
+                            label='Total Reach')
 Coa_reach['Goal'] = 'Create community collaborations (reported as # coalitions and # organizational members)'
 reach = reach.append(Coa_reach, ignore_index=True)
 
@@ -162,22 +178,18 @@ goals_sites_reach = pd.merge(unique_sites, reach, how='outer', on=['Goal', 'repo
 
 # DE participants reached
 
-# Create a function for the copied lines below
-# pa_df:
-# participants_fields:
-# participants_subsets:
-PA_total_participants = PA_Data.groupby('report_quarter')['participants_total'].agg('sum').reset_index(name='Total')
-PA_amerind = PA_Data.groupby('report_quarter')['participants_race_amerind'].agg('sum').reset_index(
-    name='American Indian or Alaska Native')
-PA_asian = PA_Data.groupby('report_quarter')['participants_race_asian'].agg('sum').reset_index(name='Asian')
-PA_black = PA_Data.groupby('report_quarter')['participants_race_black'].agg('sum').reset_index(
-    name='Black or African American')
-PA_hawpac = PA_Data.groupby('report_quarter')['participants_race_hawpac'].agg('sum').reset_index(
-    name='Native Hawaiian/Other Pacific Islander')
-PA_white = PA_Data.groupby('report_quarter')['participants_race_white'].agg('sum').reset_index(name='White')
+PA_race_dfs = []
+race_subsets = {'participants_total': 'Total',
+                'participants_race_amerind': 'American Indian or Alaska Native',
+                'participants_race_asian': 'Asian',
+                'participants_race_black': 'Black or African American',
+                'participants_race_hawpac': 'Native Hawaiian/Other Pacific Islander',
+                'participants_race_white': 'White'}
 
-PA_race = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'),
-                 [PA_total_participants, PA_amerind, PA_asian, PA_black, PA_hawpac, PA_white])
+for field, label in race_subsets .items():
+    PA_race_dfs.append(quarterly_value(df=PA_Data, field=field, metric='sum', label=label))
+
+PA_race = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'), PA_race_dfs)
 
 # Create a function for the copied lines below
 PA_race['% American Indian or Alaska Native'] = 100 * PA_race['American Indian or Alaska Native'] / PA_race['Total']
