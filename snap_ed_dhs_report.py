@@ -298,36 +298,62 @@ RE_AIM_Adoption = pd.merge(Part_orgs_reach, adoption_zips, how='outer', on='repo
 # Implementation
 
 PSE_changes = pd.merge(PSE_Changes_Export, PSE_Data[['pse_id', 'report_quarter']], how='left', on='pse_id')
-PSE_change_sites = PSE_changes.drop_duplicates(subset=['report_quarter', 'site_id']).groupby('report_quarter')[
-    'site_id'].count().reset_index(name='# of sites implementing a PSE change')
 
-PSE_NRE_sites = PSE_NRE_Data.drop_duplicates(subset=['report_quarter', 'site_id']).groupby('report_quarter')[
-    'site_id'].count().reset_index(
-    name='# of unique sites where an organizational readiness or environmental assessment was conducted')
+PSE_change_sites = quarterly_value(
+    df=PSE_changes.drop_duplicates(subset=['report_quarter', 'site_id']),
+    field='site_id',
+    metric='count',
+    label='# of sites implementing a PSE change'
+)
+
+PSE_NRE_sites = quarterly_value(
+    df=PSE_NRE_Data.drop_duplicates(subset=['report_quarter', 'site_id']),
+    field='site_id',
+    metric='count',
+    label='# of unique sites where an organizational readiness or environmental assessment was conducted'
+)
 
 RE_AIM_Implementation = pd.merge(PSE_change_sites, PSE_NRE_sites, how='outer', on='report_quarter')
 
 # Count of unique counties/cities with at least 1 partnership entry
 
-Part_Cities = Part_Data.drop_duplicates(subset=['report_quarter', 'site_city']).groupby('report_quarter')[
-    'site_city'].count().reset_index(name='# of unique cities with at least 1 partnership entry.')
-Part_Counties = Part_Data.drop_duplicates(subset=['report_quarter', 'site_county']).groupby('report_quarter')[
-    'site_county'].count().reset_index(name='# of unique counties with at least 1 partnership entry.')
+Part_Cities = quarterly_value(
+    df=Part_Data.drop_duplicates(subset=['report_quarter', 'site_city']),
+    field='site_city',
+    metric='count',
+    label='# of unique cities with at least 1 partnership entry'
+)
+
+Part_Counties = quarterly_value(
+    df=Part_Data.drop_duplicates(subset=['report_quarter', 'site_county']),
+    field='site_county',
+    metric='count',
+    label='# of unique counties with at least 1 partnership entry'
+)
 
 # Count and percent of PSE site activities will have a change adopted
 # related to food access, diet quality, or physical activity
 
-PSE_changes_count = PSE_changes.drop_duplicates(subset=['report_quarter', 'pse_id']).groupby('report_quarter')[
-    'pse_id'].count().reset_index(
-    name='# of PSE sites with a plan to implement PSE changes had at least one change adopted.')
-PSE_count = PSE_Data.groupby('report_quarter')['pse_id'].count().reset_index(
-    name='# of PSE sites with a plan to implement PSE changes.')
+PSE_changes_count = quarterly_value(
+    df=PSE_changes.drop_duplicates(subset=['report_quarter', 'pse_id']),
+    field='pse_id',
+    metric='count',
+    label='# of PSE sites with a plan to implement PSE changes had at least one change adopted'
+)
+
+PSE_count = quarterly_value(
+    df=PSE_Data,
+    field='pse_id',
+    metric='count',
+    label='# of PSE sites with a plan to implement PSE changes'
+)
+
 PSE_changes_count = pd.merge(PSE_changes_count, PSE_count, how='left', on='report_quarter')
-PSE_changes_count['% of PSE sites with a plan to implement PSE changes had at least one change adopted.'] = 100 * \
-                                                                                                            PSE_changes_count[
-                                                                                                                '# of PSE sites with a plan to implement PSE changes had at least one change adopted.'] / \
-                                                                                                            PSE_changes_count[
-                                                                                                                '# of PSE sites with a plan to implement PSE changes.']
+
+PSE_changes_count = percent(df=PSE_changes_count,
+                            num='# of PSE sites with a plan to implement PSE changes had at least one change adopted',
+                            denom='# of PSE sites with a plan to implement PSE changes',
+                            label='% of PSE sites with a plan to implement PSE changes had at least one change adopted')
 
 # Final Report
 
