@@ -270,18 +270,28 @@ RE_AIM_Reach = reduce(lambda left, right: pd.merge(left, right, how='outer', on=
 
 # Adoption
 
-Part_orgs_reach = Part_Data.groupby('report_quarter')['partnership_id'].count().reset_index(
-    name='# of partnering organizations reached')
+Part_orgs_reach = quarterly_value(
+    df=Part_Data,
+    field='partnership_id',
+    metric='count',
+    label='# of partnering organizations reached'
+)
 
+programming_zips_cols = ['report_quarter', 'site_zip']
 programming_zips = pd.concat(
-    [Coa_Members_Data.loc[Coa_Members_Data['site_zip'].notnull(), ['report_quarter', 'site_zip']],
-     IA_IC_Data.loc[IA_IC_Data['site_zip'].notnull(), ['report_quarter', 'site_zip']],
-     PA_Data[['report_quarter', 'site_zip']],
-     Part_Data[['report_quarter', 'site_zip']],
-     PSE_Data[['report_quarter', 'site_zip']]], ignore_index=True)
+    [Coa_Members_Data.loc[Coa_Members_Data['site_zip'].notnull(), programming_zips_cols],
+     IA_IC_Data.loc[IA_IC_Data['site_zip'].notnull(), programming_zips_cols],
+     PA_Data[programming_zips_cols],
+     Part_Data[programming_zips_cols],
+     PSE_Data[programming_zips_cols]
+     ], ignore_index=True).drop_duplicates()
 
-adoption_zips = programming_zips.drop_duplicates().groupby('report_quarter')['site_zip'].count().reset_index(
-    name='# of unique zip codes reached')
+adoption_zips = quarterly_value(
+    df=programming_zips,
+    field='site_zip',
+    metric='count',
+    label='# of unique zip codes reached'
+)
 
 RE_AIM_Adoption = pd.merge(Part_orgs_reach, adoption_zips, how='outer', on='report_quarter')
 
