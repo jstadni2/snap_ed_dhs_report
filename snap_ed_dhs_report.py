@@ -127,6 +127,14 @@ def quarterly_value(df, field, metric, label):
     return df.groupby('report_quarter')[field].agg(metric).reset_index(name=label)
 
 
+class QuarterlyValueInputs:
+    def __init__(self, df, field, metric, label):
+        self.df = df
+        self.field = field
+        self.metric = metric
+        self.label = label
+
+
 # # of unique programming sites (direct ed & PSE)
 
 unique_sites = PA_Data[['report_quarter', 'snap_ed_grant_goals', 'site_id']].append(
@@ -225,21 +233,40 @@ PA_demo = pd.merge(PA_demo_a, PA_demo_b, how='left', on=['report_quarter', 'Demo
 
 # Reach
 
-PA_unique_reach = PA_sites_reach.groupby('report_quarter')['PA_participants_sum'].agg('sum').reset_index(
-    name='# of unique participants attending direct education')
-PA_ed_touches = PA_Sessions_Data.groupby('report_quarter')['num_participants'].agg('sum').reset_index(
-    name='# of educational contacts via direct education')
-PA_lessons = PA_Sessions_Data.groupby('report_quarter')['session_id'].agg('count').reset_index(
-    name='# of lessons attended')
-IA_ed_touches = IA_IC_Data.groupby('report_quarter')['reach'].agg('sum').reset_index(
-    name='# of indirect education contacts')
-# Include Find Food IL map reach from Google Analytics?
-# From IA process sheet: "Report statewide entries individually. Report all other IA entries in aggregate." ?
-PSE_reach = PSE_sites_reach.groupby('report_quarter')['PSE_total_reach'].agg('sum').reset_index(
-    name='PSE total estimated reach')
+reach_inputs = [
+    QuarterlyValueInputs(
+        df=PA_sites_reach,
+        field='PA_participants_sum',
+        metric='sum',
+        label='# of unique participants attending direct education'),
+    QuarterlyValueInputs(
+        df=PA_Sessions_Data,
+        field='num_participants',
+        metric='sum',
+        label='# of educational contacts via direct education'),
+    QuarterlyValueInputs(
+        df=PA_Sessions_Data,
+        field='report_quarter',
+        metric='count',
+        label='# of lessons attended'),
+    QuarterlyValueInputs(
+        df=IA_IC_Data,
+        field='reach',
+        metric='sum',
+        label='# of indirect education contacts'),
+    QuarterlyValueInputs(
+        df=PSE_sites_reach,
+        field='PSE_total_reach',
+        metric='sum',
+        label='PSE total estimated reach')
+]
 
-RE_AIM_Reach = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'),
-                      [PA_unique_reach, PA_ed_touches, PA_lessons, IA_ed_touches, PSE_reach])
+reach_dfs = []
+
+for inputs in reach_inputs:
+    reach_dfs.append(quarterly_value(inputs.df, inputs.field, inputs.metric, inputs.label))
+
+RE_AIM_Reach = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'), reach_dfs)
 
 # Adoption
 
