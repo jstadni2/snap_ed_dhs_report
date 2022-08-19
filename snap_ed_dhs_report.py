@@ -132,7 +132,7 @@ def quarterly_value(df, field, metric, label, goals=False):
         return df.groupby('report_quarter')[field].agg(metric).reset_index(name=label)
 
 
-# Class for bundling the input arguments of quarterly_value()
+# Class that bundles the input arguments of quarterly_value()
 class QuarterlyValueInputs:
     def __init__(self, df, field, metric, label, goals=False):
         self.df = df
@@ -371,13 +371,14 @@ PSE_changes_count = percent(df=PSE_changes_count,
 
 report_dfs = [goals_sites_reach, PA_demo, RE_AIM_Reach, RE_AIM_Adoption, RE_AIM_Implementation]
 
+# Check to see if previous month is the last in the quarter
 prev_month = (pd.to_datetime("today") - pd.DateOffset(months=1)).strftime('%m')
-# Lookup fq int only
-fq_lookup = pd.DataFrame({'fq': ['Q1', 'Q2', 'Q3', 'Q4'], 'month': ['12', '03', '06', '09'], 'int': [1, 2, 3, 4]})
-# Add try except for when this script is run before the end of the quarter
-# Except: Q4, 4
-current_fq = 'Q3'#fq_lookup.loc[fq_lookup['month'] == prev_month, 'fq'].item()
-current_fq_int = 3#fq_lookup.loc[fq_lookup['month'] == prev_month, 'int'].item()
+fq_lookup = pd.DataFrame({'fq': [1, 2, 3, 4], 'month': ['12', '03', '06', '09']})
+if prev_month in fq_lookup['month']:
+    current_fq = fq_lookup.loc[fq_lookup['month'] == prev_month, 'fq'].item()
+# If not, report all four quarters
+else:
+    current_fq = 4
 
 
 # Function to filter a list of dataframes up to the specified fiscal quarter
@@ -391,11 +392,11 @@ def filter_fq(dfs, fq):
     return filtered_dfs
 
 
-report_dfs = filter_fq(report_dfs, current_fq_int)
+report_dfs = filter_fq(report_dfs, current_fq)
 
 out_path = ROOT_DIR + '/example_outputs'
 # Create string from fq int instead
-filename = out_path + '/DHS Report FY2022 ' + current_fq + '.xlsx'
+filename = out_path + '/DHS Report FY2022 Q' + str(current_fq) + '.xlsx'
 
 tab_names = ['Unique Sites and Reach by Goal', 'Direct Education Demographics', 'RE-AIM Reach', 'RE-AIM Adoption',
              'RE-AIM Implementation']
