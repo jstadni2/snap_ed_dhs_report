@@ -200,6 +200,7 @@ demo_subsets = {'participants_total': 'Total',
 for demo_field, demo_label in demo_subsets.items():
     PA_demo_dfs.append(quarterly_value(df=PA_Data, field=demo_field, metric='sum', label=demo_label))
 
+# Create function for merging lists of dfs on report_quarter
 PA_demo = reduce(lambda left, right: pd.merge(left, right, how='outer', on='report_quarter'), PA_demo_dfs)
 
 
@@ -322,14 +323,14 @@ Part_Cities = quarterly_value(
     field='site_city',
     metric='count',
     label='# of unique cities with at least 1 partnership entry'
-)
+)  # Add this metric to report output
 
 Part_Counties = quarterly_value(
     df=Part_Data.drop_duplicates(subset=['report_quarter', 'site_county']),
     field='site_county',
     metric='count',
     label='# of unique counties with at least 1 partnership entry'
-)
+)  # Add this metric to report output
 
 # Count and percent of PSE site activities will have a change adopted
 # related to food access, diet quality, or physical activity
@@ -350,6 +351,7 @@ PSE_count = quarterly_value(
 
 PSE_changes_count = pd.merge(PSE_changes_count, PSE_count, how='left', on='report_quarter')
 
+# Add this metric to report output
 PSE_changes_count = percent(df=PSE_changes_count,
                             num='# of PSE sites with a plan to implement PSE changes had at least one change adopted',
                             denom='# of PSE sites with a plan to implement PSE changes',
@@ -357,37 +359,60 @@ PSE_changes_count = percent(df=PSE_changes_count,
 
 # Final Report
 
+report_dfs = [goals_sites_reach, PA_demo, RE_AIM_Reach, RE_AIM_Adoption, RE_AIM_Implementation]
+
 prev_month = (pd.to_datetime("today") - pd.DateOffset(months=1)).strftime('%m')
 fq_lookup = pd.DataFrame({'fq': ['Q1', 'Q2', 'Q3', 'Q4'], 'month': ['12', '03', '06', '09'], 'int': [1, 2, 3, 4]})
-fq = 'Q3'#fq_lookup.loc[fq_lookup['month'] == prev_month, 'fq'].item()
-fq_int = 3#fq_lookup.loc[fq_lookup['month'] == prev_month, 'int'].item()
+current_fq = 'Q3'#fq_lookup.loc[fq_lookup['month'] == prev_month, 'fq'].item()
+current_fq_int = 3#fq_lookup.loc[fq_lookup['month'] == prev_month, 'int'].item()
 
-dfs = [goals_sites_reach, PA_demo, RE_AIM_Reach, RE_AIM_Adoption, RE_AIM_Implementation]
-filtered_dfs = []
 
-for df in dfs:
-    filtered_dfs.append(
-        df.loc[df['report_quarter'] <= fq_int].rename(columns={'report_quarter': 'Report Quarter (YTD)'}))
+# Function to filter a list of dataframes up to the specified fiscal quarter
+# dfs: list of dataframes to be filters
+# fq_int: integer value for the fiscal quarter
+def filter_fq(dfs, fq):
+    filtered_dfs = []
+    for df in dfs:
+        filtered_dfs.append(
+            df.loc[df['report_quarter'] <= fq].rename(columns={'report_quarter': 'Report Quarter (YTD)'}))
+    return filtered_dfs
+
+
+report_dfs = filter_fq(report_dfs, current_fq_int)
 
 out_path = ROOT_DIR + '/example_outputs'
-filename = out_path + '/DHS Report FY2022 ' + fq + '.xlsx'
+filename = out_path + '/DHS Report FY2022 ' + current_fq + '.xlsx'
 
 tab_names = ['Unique Sites and Reach by Goal', 'Direct Education Demographics', 'RE-AIM Reach', 'RE-AIM Adoption',
              'RE-AIM Implementation']
 
-dfs_dict = dict(zip(tab_names, filtered_dfs))
 
-writer = pd.ExcelWriter(filename, engine='xlsxwriter')
-for sheetname, df in dfs_dict.items():  # loop through `dict` of dataframes
-    df.to_excel(writer, sheet_name=sheetname, index=False)  # send df to writer
-    worksheet = writer.sheets[sheetname]  # pull worksheet object
-    for idx, col in enumerate(df):  # loop through all columns
-        series = df[col]
-        max_len = max((
-            series.astype(str).map(len).max(),  # len of largest item
-            len(str(series.name))  # len of column name/header
-        )) + 1  # adding a little extra space
-        worksheet.set_column(idx, idx, max_len)  # set column width
-        worksheet.autofilter(0, 0, 0, len(df.columns) - 1)
+# Function to export a list of dataframes as an Excel workbook
+# file: string for the name or path of the file
+# sheet_names: list of strings for the name of each sheet
+# dfs: list of dataframes for the report
+def write_dhs_report(file, sheet_names, dfs):
+    report_dict = dict(zip(sheet_names, dfs))
+    writer = pd.ExcelWriter(file, engine='xlsxwriter')
+    # Loop through dict of dataframes
+    for sheet_name, df in report_dict.items():
+        # Send df to writer
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+        # Pull worksheet object
+        worksheet = writer.sheets[sheet_name]
+        # Loop through all columns
+        for idx, col in enumerate(df):
+            series = df[col]
+            max_len = max((
+                # Len of the largest item
+                series.astype(str).map(len).max(),
+                # Len of column name/header
+                len(str(series.name))
+            )) + 1  # adding a little extra space
+            # Set column width
+            worksheet.set_column(idx, idx, max_len)
+            worksheet.autofilter(0, 0, 0, len(df.columns) - 1)
+    writer.close()
 
-writer.close()
+
+write_dhs_report(filename, tab_names, report_dfs)
