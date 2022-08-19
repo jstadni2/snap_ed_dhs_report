@@ -58,6 +58,6 @@ Example input files are provided in the [/example_inputs](https://github.com/jst
 ## Output Files
 
 The following output files are produced by the SNAP-Ed DHS Report script:
-- [DHS Report FY2022 FQ.xlsx](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/example_outputs/DHS%20Report%20FY2022%20Q3.xlsx): A workbook that compiles the quarterly SNAP-Ed evaluation metrics reported to IDHS.
+- [DHS Report FY2022 FQ.xlsx](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/example_outputs/DHS%20Report%20FY2022%20Q4.xlsx): A workbook that compiles the quarterly SNAP-Ed evaluation metrics reported to IDHS.
 
 Example output files are provided in the [/example_outputs](https://github.com/jstadni2/snap_ed_dhs_report/tree/master/example_outputs) directory.

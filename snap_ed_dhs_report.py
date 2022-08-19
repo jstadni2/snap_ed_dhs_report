@@ -371,7 +371,7 @@ PSE_changes_count = percent(df=PSE_changes_count,
 
 report_dfs = [goals_sites_reach, PA_demo, RE_AIM_Reach, RE_AIM_Adoption, RE_AIM_Implementation]
 
-# Check to see if previous month is the last in the quarter
+# Check if previous month is the last in the quarter
 prev_month = (pd.to_datetime("today") - pd.DateOffset(months=1)).strftime('%m')
 fq_lookup = pd.DataFrame({'fq': [1, 2, 3, 4], 'month': ['12', '03', '06', '09']})
 if prev_month in fq_lookup['month']:
