@@ -1,6 +1,7 @@
 # SNAP-Ed DHS Report
 
-{High-level project description goes here}
+The SNAP-Ed DHS Report script generates metrics for Illinois Extension's quarterly SNAP-Ed evaluation report. Data from [PEARS](https://www.k-state.edu/oeie/pears/) is used to calculate evaluation metrics
+specified by the [SNAP-Ed Evaluation Framework](https://snapedtoolkit.org/framework/index/) and [Illinois Department of Human Services](https://www.dhs.state.il.us/page.aspx).
 
 ## Installation
 
@@ -32,22 +33,19 @@ The following steps are required to execute the SNAP-Ed DHS Report script using 
 3. Set the appropriate input and output paths in `snap_ed_dhs_report.py` and `run_script.bat`.
 	- The [Input Files](#input-files) and [Output Files](#output-files) sections provide an overview of required and output data files.
 	- Copying input files to the build context would enable continued use of Docker and `run_script.bat` with minimal modifications.
-	- `snap_ed_dhs_report.py` may require additional alterations depending on the staff list format. 
-4. Set the username and password variables in [snap_ed_dhs_report.py](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/snap_ed_dhs_report.py#L764-L765) using valid Office 365 credentials.	
 
 ### Additional setup considerations
 
-- The formatting of PEARS export workbooks changes periodically. The example PEARS exports included in the [/example_inputs](https://github.com/jstadni2/snap_ed_dhs_report/tree/master/example_inputs) directory are based on workbooks downloaded on 06/28/22.
+- The formatting of PEARS export workbooks changes periodically. The example PEARS exports included in the [/example_inputs](https://github.com/jstadni2/snap_ed_dhs_report/tree/master/example_inputs) directory are based on workbooks downloaded on 08/12/22.
 Modifications to `snap_ed_dhs_report.py` may be necessary to run with subsequent PEARS exports.
-- Illinois Extension utilized [Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to run this script from a Windows PC on a monthly basis.
+- Illinois Extension utilized [Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) to run this script from a Windows PC on a quarterly basis.
 - Plans to deploy the SNAP-Ed DHS Report script on AWS were never implemented and are currently beyond the scope of this repository.
 - Other SNAP-Ed implementing agencies intending to utilize the SNAP-Ed DHS Report script should consider the following adjustments as they pertain to their organization:
-	- {Specific project setup considerations go here}
+	- The metrics provided in this report are based in part on guidance from IDHS. Other regulatory agencies overseeing SNAP-Ed may require additional evaluation metrics.
 	
 ## Input Files
 
 The following input files are required to run the SNAP-Ed DHS Report script:
-- {Describe input files here}
 - Reformatted PEARS module exports output from the [PEARS Nightly Export Reformatting script](https://github.com/jstadni2/pears_nightly_export_reformatting):
     - [Coalition_Export.xlsx](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/example_inputs/Coalition_Export.xlsx)
     - [Indirect_Activity_Export.xlsx](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/example_inputs/Indirect_Activity_Export.xlsx)
@@ -60,6 +58,6 @@ Example input files are provided in the [/example_inputs](https://github.com/jst
 ## Output Files
 
 The following output files are produced by the SNAP-Ed DHS Report script:
-- {Describe output files here}
+- [DHS Report FY2022 FQ.xlsx](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/example_outputs/DHS%20Report%20FY2022%20Q3.xlsx): A workbook that compiles the quarterly SNAP-Ed evaluation metrics reported to IDHS.
 
 Example output files are provided in the [/example_outputs](https://github.com/jstadni2/snap_ed_dhs_report/tree/master/example_outputs) directory.

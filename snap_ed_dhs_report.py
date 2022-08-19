@@ -362,7 +362,10 @@ PSE_changes_count = percent(df=PSE_changes_count,
 report_dfs = [goals_sites_reach, PA_demo, RE_AIM_Reach, RE_AIM_Adoption, RE_AIM_Implementation]
 
 prev_month = (pd.to_datetime("today") - pd.DateOffset(months=1)).strftime('%m')
+# Lookup fq int only
 fq_lookup = pd.DataFrame({'fq': ['Q1', 'Q2', 'Q3', 'Q4'], 'month': ['12', '03', '06', '09'], 'int': [1, 2, 3, 4]})
+# Add try except for when this script is run before the end of the quarter
+# Except: Q4, 4
 current_fq = 'Q3'#fq_lookup.loc[fq_lookup['month'] == prev_month, 'fq'].item()
 current_fq_int = 3#fq_lookup.loc[fq_lookup['month'] == prev_month, 'int'].item()
 
@@ -381,6 +384,7 @@ def filter_fq(dfs, fq):
 report_dfs = filter_fq(report_dfs, current_fq_int)
 
 out_path = ROOT_DIR + '/example_outputs'
+# Create string from fq int instead
 filename = out_path + '/DHS Report FY2022 ' + current_fq + '.xlsx'
 
 tab_names = ['Unique Sites and Reach by Goal', 'Direct Education Demographics', 'RE-AIM Reach', 'RE-AIM Adoption',
