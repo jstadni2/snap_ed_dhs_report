@@ -1,7 +1,7 @@
 # SNAP-Ed DHS Report
 
 The SNAP-Ed DHS Report script generates metrics for Illinois Extension's quarterly SNAP-Ed evaluation report. Data from [PEARS](https://www.k-state.edu/oeie/pears/) is used to calculate evaluation metrics
-specified by the [SNAP-Ed Evaluation Framework](https://snapedtoolkit.org/framework/index/) and [Illinois Department of Human Services](https://www.dhs.state.il.us/page.aspx).
+specified by the [SNAP-Ed Evaluation Framework](https://snapedtoolkit.org/framework/index/) and [Illinois Department of Human Services \(IDHS\)](https://www.dhs.state.il.us/page.aspx).
 
 ## Installation
 

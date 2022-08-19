@@ -123,16 +123,23 @@ PSE_NRE_Data = PSE_NRE_Data.loc[PSE_NRE_Data['baseline_date'] >= fy_22_qtr_bound
 # field: column used to calculate the quarterly value
 # metric: 'sum' or 'count'
 # label: string for the column label of the quarterly value
-def quarterly_value(df, field, metric, label):
-    return df.groupby('report_quarter')[field].agg(metric).reset_index(name=label)
+# goals: boolean for whether the metric should be grouped by 'goals' (default: False)
+def quarterly_value(df, field, metric, label, goals=False):
+    if goals:
+        return df.groupby([
+            'report_quarter', 'goal'])[field].agg(metric).reset_index(name=label).rename(columns={'goal': 'Goal'})
+    else:
+        return df.groupby('report_quarter')[field].agg(metric).reset_index(name=label)
 
 
+# Class for bundling the input arguments of quarterly_value()
 class QuarterlyValueInputs:
-    def __init__(self, df, field, metric, label):
+    def __init__(self, df, field, metric, label, goals=False):
         self.df = df
         self.field = field
         self.metric = metric
         self.label = label
+        self.goals = goals
 
 
 # # of unique programming sites (direct ed & PSE)
@@ -140,10 +147,11 @@ class QuarterlyValueInputs:
 unique_sites = PA_Data[['report_quarter', 'snap_ed_grant_goals', 'site_id']].append(
     PSE_Data[['report_quarter', 'snap_ed_grant_goals', 'site_id']], ignore_index=True).drop_duplicates()
 unique_sites = explode_goals(unique_sites)
-# Create function for quarterly goal value
-unique_sites = unique_sites.groupby(['report_quarter', 'goal'])['site_id'].count().reset_index(
-    name='# of unique programming sites (direct ed & PSE)')
-unique_sites = unique_sites.rename(columns={'goal': 'Goal'})
+unique_sites = quarterly_value(df=unique_sites,
+                               field='site_id',
+                               metric='count',
+                               label='# of unique programming sites (direct ed & PSE)',
+                               goals=True)
 # Remove (direct ed & PSE) from column, add to snap_ed_grant_goals?
 
 unique_coalitions = quarterly_value(Coa_Data[['report_quarter', 'coalition_id']].drop_duplicates(),
@@ -167,9 +175,11 @@ PSE_sites_reach = PSE_sites_reach.sort_values(['report_quarter', 'site_id', 'tot
     columns={'total_reach': 'PSE_total_reach'}).drop_duplicates(subset=['report_quarter', 'site_id'], keep='last')
 site_reach = pd.merge(PA_sites_reach, PSE_sites_reach, how='outer', on=['report_quarter', 'goal', 'site_id'])
 site_reach['Site Reach'] = site_reach[['PA_participants_sum', 'PSE_total_reach']].max(axis=1)
-reach = site_reach.groupby(['report_quarter', 'goal'])['Site Reach'].agg('sum').reset_index(
-    name='Total Reach')  # Reach (greater of direct ed or PSE across unique sites)
-reach = reach.rename(columns={'goal': 'Goal'})
+reach = quarterly_value(df=site_reach,
+                        field='Site Reach',
+                        metric='sum',
+                        label='Total Reach',
+                        goals=True)
 
 # Coa_reach = Coa_Data[
 #     ['report_quarter',
