@@ -53,7 +53,8 @@ The following input files are required to run the SNAP-Ed DHS Report script:
     - [Program_Activities_Export.xlsx](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/example_inputs/Program_Activities_Export.xlsx)
     - [PSE_Site_Activity_Export.xlsx](https://github.com/jstadni2/snap_ed_dhs_report/blob/master/example_inputs/PSE_Site_Activity_Export.xlsx)
 
-Example input files are provided in the [/example_inputs](https://github.com/jstadni2/snap_ed_dhs_report/tree/master/example_inputs) directory. 
+Example input files are provided in the [/example_inputs](https://github.com/jstadni2/snap_ed_dhs_report/tree/master/example_inputs) directory.
+PEARS module exports included as example files are generated using the [Faker](https://faker.readthedocs.io/en/master/) Python package and do not represent actual program evaluation data. 
 
 ## Output Files
 
